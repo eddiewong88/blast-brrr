@@ -72,7 +72,7 @@ contract Brrr is
     // ╚════════════════════════╝
 
     function mint() external payable {
-        require(msg.value >= _mintFee, "bruh ETH plz");
+        require(msg.value == _mintFee, "bruh ETH plz");
         require(totalSupply() + 1 <= _maxSupply, "exceed supply");
         // mint
         _tokenIdCounter++;
