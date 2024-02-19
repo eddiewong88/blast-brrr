@@ -14,9 +14,15 @@ contract Brrr is
     OwnableUpgradeable,
     ERC2981Upgradeable
 {
+    // ╔════════════════════════╗
+    //          CONSTANTS
+    // ╚════════════════════════╝
     address public constant BLAST_YIELD_ADDRESS =
         0x4300000000000000000000000000000000000002;
 
+    // ╔════════════════════════╗
+    //          VARIABLES
+    // ╚════════════════════════╝
     address public _deployer;
     address public _governor;
 
@@ -35,6 +41,7 @@ contract Brrr is
         address indexed newGovernor
     );
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
