@@ -2,6 +2,9 @@
 
 yield go brrr
 
+## Please see our Front-end demo: https://uat-blast-brrr.web.app
+(we already purchased blastbrrr.com but haven't deployed yet as we still have problem with testnet YIELD_CONTRACT)
+
 ## TO DEPLOY:
 
 - Add private key to `.env` file. (copy `.env.example` and remove `.example`)
