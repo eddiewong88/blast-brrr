@@ -31,15 +31,6 @@ contract Deploy is Script {
         wrappedProxy = Brrr(address(proxy));
         wrappedProxy.initialize(1e17, 1000); // Mint Fee: 0.1 ETH, Max Supply: 1,000 NFTs
 
-        console2.log("Impl deployed! Address:", address(brrrImpl));
-
-        // Deploy Proxy
-        proxy = new TransparentUpgradeableProxy(
-            address(brrrImpl),
-            address(proxyAdmin),
-            ""
-        );
-
         vm.stopBroadcast();
 
         console2.log("Brrr deployed!");

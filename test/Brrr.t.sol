@@ -23,9 +23,9 @@ contract BrrrTest is Test {
     uint256 public constant MINT_FEE = 1e17;
 
     function setUp() public {
-        vm.createSelectFork("https://sepolia.blast.io");
+        vm.createSelectFork("https://rpc.ankr.com/blast");
 
-        vm.startBroadcast(DEPLOYER);
+        vm.startPrank(DEPLOYER);
 
         // Deploy ProxyAdmin
         proxyAdmin = new ProxyAdmin(address(this));
@@ -40,7 +40,7 @@ contract BrrrTest is Test {
         brrr = Brrr(address(proxy));
         brrr.initialize(1e17, 1000); // Mint Fee: 0.1 ETH, Max Supply: 1,000 NFTs
 
-        vm.stopBroadcast();
+        vm.stopPrank();
     }
 
     function test_CheckRoyaltyInfo() public {
