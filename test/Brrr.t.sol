@@ -38,7 +38,7 @@ contract BrrrTest is Test {
             ""
         );
         brrr = Brrr(address(proxy));
-        brrr.initialize(1e17, 1000); // Mint Fee: 0.1 ETH, Max Supply: 1,000 NFTs
+        brrr.initialize(address(blast), 1e17, 1000); // Mint Fee: 0.1 ETH, Max Supply: 1,000 NFTs
 
         vm.stopPrank();
     }

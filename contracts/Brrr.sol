@@ -15,16 +15,11 @@ contract Brrr is
     ERC2981Upgradeable
 {
     // ╔════════════════════════╗
-    //          CONSTANTS
-    // ╚════════════════════════╝
-    address public constant BLAST_YIELD_ADDRESS =
-        0x4300000000000000000000000000000000000002;
-
-    // ╔════════════════════════╗
     //          VARIABLES
     // ╚════════════════════════╝
     address public _deployer;
     address public _governor;
+    IBlast public blast;
 
     uint256 public _maxSupply;
     uint256 public _principal;
@@ -46,7 +41,11 @@ contract Brrr is
         _disableInitializers();
     }
 
-    function initialize(uint256 mintFee, uint256 maxSupply) public initializer {
+    function initialize(
+        address _blast,
+        uint256 mintFee,
+        uint256 maxSupply
+    ) public initializer {
         __ERC721_init("Yield go brrr", "BRRR");
         __ERC721Enumerable_init();
         __ERC2981_init();
@@ -54,14 +53,15 @@ contract Brrr is
 
         _maxSupply = maxSupply;
         _mintFee = mintFee;
+        blast = IBlast(_blast);
 
         // configure gas mechanism
-        IBlast(BLAST_YIELD_ADDRESS).configureClaimableGas();
+        IBlast(_blast).configureClaimableGas();
         // @dev: does not work on testnet
-        // IBlast(BLAST_YIELD_ADDRESS).configureAutomaticYield();
+        // IBlast(_blast).configureAutomaticYield();
 
         // as owner = msg.sender due to the modifier
-        IBlast(BLAST_YIELD_ADDRESS).configureGovernor(msg.sender);
+        IBlast(_blast).configureGovernor(msg.sender);
 
         // Set ERC2981 royalty info; fee = 10%
         // NOTE: Config `royaltyFee` before deploying, in BPS.
@@ -69,7 +69,7 @@ contract Brrr is
     }
 
     function updateGoverner(address newGovernor) external onlyOwner {
-        IBlast(BLAST_YIELD_ADDRESS).configureGovernor(newGovernor);
+        blast.configureGovernor(newGovernor);
         emit UpdateGovernor(_governor, newGovernor);
         _governor = newGovernor;
     }
@@ -111,20 +111,13 @@ contract Brrr is
         require(address(this).balance > _principal, "no yield");
         // will leave the principal in the contract
         uint256 yieldAmount = address(this).balance - _principal;
-        IBlast(BLAST_YIELD_ADDRESS).claimYield(
-            address(this),
-            msg.sender,
-            yieldAmount
-        );
+        blast.claimYield(address(this), msg.sender, yieldAmount);
         emit ClaimYield(msg.sender, yieldAmount);
     }
 
     function claimGas() external onlyOwner {
         // use msg.sender as it's ensured to be the owner
-        uint256 receiveAmount = IBlast(BLAST_YIELD_ADDRESS).claimMaxGas(
-            address(this),
-            msg.sender
-        );
+        uint256 receiveAmount = blast.claimMaxGas(address(this), msg.sender);
         emit ClaimGas(msg.sender, receiveAmount);
     }
 
