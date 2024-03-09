@@ -8,8 +8,6 @@ import {IBlast} from "../contracts/interfaces/IBlast.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
-import {MockBlast} from "./MockBlast.sol";
-
 contract BrrrForkTest is Test {
     IBlast public blast = IBlast(0x4300000000000000000000000000000000000002);
 

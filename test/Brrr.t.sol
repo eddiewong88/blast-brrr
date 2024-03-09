@@ -8,10 +8,14 @@ import {IBlast} from "../contracts/interfaces/IBlast.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
-import {MockBlast} from "./MockBlast.sol";
+contract Reentrancy {
+    receive() external payable {
+        Brrr(msg.sender).burn(1);
+    }
+}
 
 contract BrrrTest is Test {
-    IBlast public blast;
+    IBlast public blast = IBlast(0x4300000000000000000000000000000000000002);
 
     address public constant DEPLOYER =
         0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // getting from scan
@@ -26,7 +30,17 @@ contract BrrrTest is Test {
     uint256 public constant MAX_SUPPLY = 1000;
 
     function setUp() public {
-        blast = IBlast(address(new MockBlast()));
+        // mockCalls to make test run
+        vm.mockCall(
+            address(blast),
+            abi.encodeWithSelector(blast.configureClaimableGas.selector),
+            ""
+        );
+        vm.mockCall(
+            address(blast),
+            abi.encodeWithSelector(blast.configureAutomaticYield.selector),
+            ""
+        );
 
         vm.startPrank(DEPLOYER);
 
@@ -185,5 +199,21 @@ contract BrrrTest is Test {
         vm.prank(ALICE);
         brrr.printItBaby{value: 0.1 ether}();
         assertEq(brrr._principal(), 0.1 ether);
+    }
+
+    function testRevert_Burn_Reentrancy() public {
+        // Deploy Reentrancy contract
+        address reentrancy = address(new Reentrancy());
+
+        // Mint NFT
+        deal(reentrancy, 0.1 ether);
+        vm.prank(reentrancy);
+        brrr.mint{value: 0.1 ether}();
+
+        // Burn with reentrant
+        vm.prank(reentrancy);
+        // revert with ERC721NonexistentToken(1) from reentrant call which result in ETH send failure
+        vm.expectRevert("Failed to send ETH");
+        brrr.burn(1);
     }
 }
