@@ -95,14 +95,15 @@ contract Brrr is
         uint256 mintFee = _mintFee;
         require(_principal >= mintFee, "not enough ETH to refund");
 
-        // refund ETH to msg.sender
-        (bool sent, ) = payable(msg.sender).call{value: mintFee}("");
-        require(sent, "Failed to send ETH");
-
+        // update states before transfer to prevent reentrancy
         _principal -= mintFee;
         // set true for approval check, i.e. isOwner
         _burn(tokenId);
         emit Burn(msg.sender, tokenId);
+
+        // refund ETH to msg.sender
+        (bool sent, ) = payable(msg.sender).call{value: mintFee}("");
+        require(sent, "Failed to send ETH");
     }
 
     function claim() external {
