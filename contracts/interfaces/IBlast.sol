@@ -13,6 +13,10 @@ enum GasMode {
 }
 
 interface IBlast {
+    function isGovernor(address contractAddress) external view returns (bool);
+
+    function isAuthorized(address contractAddress) external view returns (bool);
+
     function governorMap(address) external view returns (address);
 
     // configure

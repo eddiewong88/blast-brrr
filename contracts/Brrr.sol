@@ -57,21 +57,15 @@ contract Brrr is
 
         // configure gas mechanism
         IBlast(_blast).configureClaimableGas();
-        // @dev: does not work on testnet
-        // IBlast(_blast).configureAutomaticYield();
+        // configure yield mechanism
+        IBlast(_blast).configureAutomaticYield();
 
-        // as owner = msg.sender due to the modifier
+        // Set contract creator as governor
         IBlast(_blast).configureGovernor(msg.sender);
 
         // Set ERC2981 royalty info; fee = 10%
         // NOTE: Config `royaltyFee` before deploying, in BPS.
         _setDefaultRoyalty(msg.sender, 1000);
-    }
-
-    function updateGoverner(address newGovernor) external onlyOwner {
-        blast.configureGovernor(newGovernor);
-        emit UpdateGovernor(_governor, newGovernor);
-        _governor = newGovernor;
     }
 
     // ╔════════════════════════╗
@@ -113,12 +107,6 @@ contract Brrr is
         uint256 yieldAmount = address(this).balance - _principal;
         blast.claimYield(address(this), msg.sender, yieldAmount);
         emit ClaimYield(msg.sender, yieldAmount);
-    }
-
-    function claimGas() external onlyOwner {
-        // use msg.sender as it's ensured to be the owner
-        uint256 receiveAmount = blast.claimMaxGas(address(this), msg.sender);
-        emit ClaimGas(msg.sender, receiveAmount);
     }
 
     function previewClaimableYield() external view returns (uint256) {
