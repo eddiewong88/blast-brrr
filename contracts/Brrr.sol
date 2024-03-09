@@ -102,10 +102,11 @@ contract Brrr is
 
     function claim() external {
         require(balanceOf(msg.sender) > 0, "no rights to claim");
-        require(address(this).balance > _principal, "no yield");
-        // will leave the principal in the contract
         uint256 yieldAmount = address(this).balance - _principal;
-        blast.claimYield(address(this), msg.sender, yieldAmount);
+        require(yieldAmount > 0, "no yield");
+        // will leave the principal in the contract
+        (bool sent, ) = payable(msg.sender).call{value: yieldAmount}("");
+        require(sent, "Failed to send ETH");
         emit ClaimYield(msg.sender, yieldAmount);
     }
 

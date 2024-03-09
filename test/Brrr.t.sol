@@ -22,7 +22,8 @@ contract BrrrTest is Test {
     address public constant ALICE = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
     address public constant BOB = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
 
-    uint256 public constant MINT_FEE = 1e17;
+    uint256 public constant MINT_FEE = 0.1 ether;
+    uint256 public constant MAX_SUPPLY = 1000;
 
     function setUp() public {
         blast = IBlast(address(new MockBlast()));
@@ -40,7 +41,7 @@ contract BrrrTest is Test {
             ""
         );
         brrr = Brrr(address(proxy));
-        brrr.initialize(address(blast), 1e17, 1000); // Mint Fee: 0.1 ETH, Max Supply: 1,000 NFTs
+        brrr.initialize(address(blast), MINT_FEE, MAX_SUPPLY); // Mint Fee: 0.1 ETH, Max Supply: 1,000 NFTs
 
         vm.stopPrank();
     }
@@ -113,5 +114,76 @@ contract BrrrTest is Test {
         assertEq(brrr.totalSupply(), 1);
         assertEq(ALICE.balance, 0); // ALICE not get refunded
         assertEq(brrr._principal(), 1e17);
+    }
+
+    function testSuccess_Claim_OwnerClaim_BalanceShouldIncrease() public {
+        // Mint 1 NFT for ALICE
+        deal(ALICE, 0.1 ether);
+        vm.prank(ALICE);
+        brrr.mint{value: 0.1 ether}();
+
+        // Simulate earning yield
+        deal(address(brrr), 0.2 ether);
+
+        // Claim success, ALICE should receive 0.1 ether
+        uint256 balanceBefore = ALICE.balance;
+        vm.prank(ALICE);
+        brrr.claim();
+        assertEq(ALICE.balance - balanceBefore, 0.1 ether);
+    }
+
+    function testRevert_Claim_OwnerClaimButNoYield() public {
+        // Mint 1 NFT for ALICE
+        deal(ALICE, 0.1 ether);
+        vm.prank(ALICE);
+        brrr.mint{value: 0.1 ether}();
+
+        // Claim no yield
+        vm.prank(ALICE);
+        vm.expectRevert("no yield");
+        brrr.claim();
+    }
+
+    function testRevert_Claim_NonOwnerTryToClaim() public {
+        // ALICE can't claim yet due to not owning any NFT
+        vm.prank(ALICE);
+        vm.expectRevert("no rights to claim");
+        brrr.claim();
+    }
+
+    function testSuccess_PreviewClaimableYield() public {
+        // Nothing yet
+        assertEq(brrr.previewClaimableYield(), 0);
+
+        // Principal with no yield
+        deal(ALICE, 0.1 ether);
+        vm.prank(ALICE);
+        brrr.mint{value: 0.1 ether}();
+        assertEq(brrr.previewClaimableYield(), 0);
+
+        // Simulate earning yield
+        deal(address(brrr), 0.2 ether);
+
+        // There should be yield to claim
+        assertEq(brrr.previewClaimableYield(), 0.1 ether);
+
+        // Change in principal should not affect
+        // Principal increase
+        deal(ALICE, 0.1 ether);
+        vm.prank(ALICE);
+        brrr.mint{value: 0.1 ether}();
+        assertEq(brrr.previewClaimableYield(), 0.1 ether);
+        // Principal decrease
+        vm.prank(ALICE);
+        brrr.burn(1);
+        assertEq(brrr.previewClaimableYield(), 0.1 ether);
+    }
+
+    function testSuccess_PrintItBaby_PrincipalShouldIncrease() public {
+        // Print 0.1 ether to the contract
+        deal(ALICE, 0.1 ether);
+        vm.prank(ALICE);
+        brrr.printItBaby{value: 0.1 ether}();
+        assertEq(brrr._principal(), 0.1 ether);
     }
 }
