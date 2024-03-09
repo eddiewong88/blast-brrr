@@ -8,8 +8,10 @@ import {IBlast} from "../contracts/interfaces/IBlast.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
+import {MockBlast} from "./MockBlast.sol";
+
 contract BrrrTest is Test {
-    IBlast public blast = IBlast(0x4300000000000000000000000000000000000002);
+    IBlast public blast;
 
     address public constant DEPLOYER =
         0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // getting from scan
@@ -23,7 +25,7 @@ contract BrrrTest is Test {
     uint256 public constant MINT_FEE = 1e17;
 
     function setUp() public {
-        vm.createSelectFork("https://rpc.ankr.com/blast");
+        blast = IBlast(address(new MockBlast()));
 
         vm.startPrank(DEPLOYER);
 
