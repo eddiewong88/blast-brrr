@@ -17,24 +17,17 @@ contract Brrr is
     // ╔════════════════════════╗
     //          VARIABLES
     // ╚════════════════════════╝
-    address public _deployer;
-    address public _governor;
     IBlast public blast;
 
-    uint256 public _maxSupply;
-    uint256 public _principal;
-    uint256 public _mintFee;
-    uint256 public _tokenIdCounter;
+    uint256 public maxSupply;
+    uint256 public principal;
+    uint256 public mintFee;
+    uint256 public tokenIdCounter;
 
     event Mint(address indexed minter, uint256 tokenId);
     event Burn(address indexed burner, uint256 tokenId);
-    event ClaimGas(address indexed claimer, uint256 amount);
     event ClaimYield(address indexed claimer, uint256 amount);
     event PrintItBaby(address indexed printer, uint256 amount);
-    event UpdateGovernor(
-        address indexed oldGovernor,
-        address indexed newGovernor
-    );
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -43,16 +36,16 @@ contract Brrr is
 
     function initialize(
         address _blast,
-        uint256 mintFee,
-        uint256 maxSupply
+        uint256 _mintFee,
+        uint256 _maxSupply
     ) public initializer {
         __ERC721_init("Yield go brrr", "BRRR");
         __ERC721Enumerable_init();
         __ERC2981_init();
         __Ownable_init(msg.sender);
 
-        _maxSupply = maxSupply;
-        _mintFee = mintFee;
+        maxSupply = _maxSupply;
+        mintFee = _mintFee;
         blast = IBlast(_blast);
 
         // configure gas mechanism
@@ -73,24 +66,22 @@ contract Brrr is
     // ╚════════════════════════╝
 
     function mint() external payable {
-        require(msg.value == _mintFee, "bruh ETH plz");
-        require(totalSupply() + 1 <= _maxSupply, "exceed supply");
+        require(msg.value == mintFee, "bruh ETH plz");
+        require(totalSupply() + 1 <= maxSupply, "exceed supply");
         // mint
-        _tokenIdCounter++;
-        _mint(msg.sender, _tokenIdCounter);
+        tokenIdCounter++;
+        _mint(msg.sender, tokenIdCounter);
         // accrue principal
-        _principal += msg.value;
-        emit Mint(msg.sender, _tokenIdCounter);
+        principal += msg.value;
+        emit Mint(msg.sender, tokenIdCounter);
     }
 
     function burn(uint256 tokenId) external {
         require(ownerOf(tokenId) == msg.sender, "Caller is not the owner");
-
-        uint256 mintFee = _mintFee;
-        require(_principal >= mintFee, "not enough ETH to refund");
+        require(principal >= mintFee, "not enough ETH to refund");
 
         // update states before transfer to prevent reentrancy
-        _principal -= mintFee;
+        principal -= mintFee;
         // set true for approval check, i.e. isOwner
         _burn(tokenId);
         emit Burn(msg.sender, tokenId);
@@ -102,7 +93,7 @@ contract Brrr is
 
     function claim() external {
         require(balanceOf(msg.sender) > 0, "no rights to claim");
-        uint256 yieldAmount = address(this).balance - _principal;
+        uint256 yieldAmount = address(this).balance - principal;
         require(yieldAmount > 0, "no yield");
         // will leave the principal in the contract
         (bool sent, ) = payable(msg.sender).call{value: yieldAmount}("");
@@ -112,14 +103,14 @@ contract Brrr is
 
     function previewClaimableYield() external view returns (uint256) {
         return
-            address(this).balance > _principal
-                ? address(this).balance - _principal
+            address(this).balance > principal
+                ? address(this).balance - principal
                 : 0;
     }
 
     function printItBaby() external payable {
         require(msg.value > 0, "bruh");
-        _principal += msg.value;
+        principal += msg.value;
         emit PrintItBaby(msg.sender, msg.value);
     }
 

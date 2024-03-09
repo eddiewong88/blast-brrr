@@ -81,7 +81,7 @@ contract BrrrTest is Test {
         // ALICE mints 1 NFT
         brrr.mint{value: 1 * 1e17}();
         assertEq(brrr.totalSupply(), 1);
-        assertEq(brrr._principal(), 1 * 1e17);
+        assertEq(brrr.principal(), 1 * 1e17);
         assertEq(ALICE.balance, 4 * 1e17);
 
         deal(BOB, 3 * 1e17);
@@ -92,7 +92,7 @@ contract BrrrTest is Test {
         assertEq(brrr.totalSupply(), 2);
         assertEq(BOB.balance, 2 * 1e17);
         // Accumulate principal should 9 * MINT_FEE = 1e18
-        assertEq(brrr._principal(), 2 * 1e17);
+        assertEq(brrr.principal(), 2 * 1e17);
     }
 
     function test_burn_should_refund_mintfee() public {
@@ -102,14 +102,14 @@ contract BrrrTest is Test {
         brrr.mint{value: 1e17}();
         assertEq(brrr.totalSupply(), 1);
         assertEq(ALICE.balance, 0);
-        assertEq(brrr._principal(), 1e17);
+        assertEq(brrr.principal(), 1e17);
 
         vm.prank(ALICE);
         // ALICE burn her NFT, refund the mintFee = 0.1 ETH
         brrr.burn(1);
         assertEq(brrr.totalSupply(), 0);
         assertEq(ALICE.balance, 1e17); // ALICE get refunded
-        assertEq(brrr._principal(), 0);
+        assertEq(brrr.principal(), 0);
     }
 
     function test_nonOwner_cannot_burn() public {
@@ -119,7 +119,7 @@ contract BrrrTest is Test {
         brrr.mint{value: 1e17}();
         assertEq(brrr.totalSupply(), 1);
         assertEq(ALICE.balance, 0);
-        assertEq(brrr._principal(), 1e17);
+        assertEq(brrr.principal(), 1e17);
 
         vm.prank(BOB);
         // ALICE burn her NFT, refund the mintFee = 0.1 ETH
@@ -127,7 +127,7 @@ contract BrrrTest is Test {
         brrr.burn(1);
         assertEq(brrr.totalSupply(), 1);
         assertEq(ALICE.balance, 0); // ALICE not get refunded
-        assertEq(brrr._principal(), 1e17);
+        assertEq(brrr.principal(), 1e17);
     }
 
     function testSuccess_Claim_OwnerClaim_BalanceShouldIncrease() public {
@@ -193,12 +193,12 @@ contract BrrrTest is Test {
         assertEq(brrr.previewClaimableYield(), 0.1 ether);
     }
 
-    function testSuccess_PrintItBaby_PrincipalShouldIncrease() public {
+    function testSuccess_PrintItBabyprincipalShouldIncrease() public {
         // Print 0.1 ether to the contract
         deal(ALICE, 0.1 ether);
         vm.prank(ALICE);
         brrr.printItBaby{value: 0.1 ether}();
-        assertEq(brrr._principal(), 0.1 ether);
+        assertEq(brrr.principal(), 0.1 ether);
     }
 
     function testRevert_Burn_Reentrancy() public {
