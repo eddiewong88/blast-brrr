@@ -12,9 +12,9 @@ contract Deploy is Script {
 
     uint256 internal deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
 
-    // Mint Fee: 0.1 ETH, Max Supply: 1,000 NFTs
+    // Mint Fee: 0.1 ETH, Max Supply: 10,000 NFTs
     uint256 internal constant MINT_FEE = 0.1 ether;
-    uint256 internal constant MAX_SUPPLY = 1000;
+    uint256 internal constant MAX_SUPPLY = 10000;
 
     function run() public {
         console2.log("Deploying Brrr...");
@@ -39,9 +39,9 @@ contract Deploy is Script {
 
         vm.stopBroadcast();
 
-        // console2.log("Brrr deployed!");
-        // console2.log("ProxyAdmin:", proxyAdmin);
-        // console2.log("Proxy:", brrrProxy);
-        // console2.log("Impl:", brrrImpl);
+        console2.log("Brrr deployed!");
+        console2.log("ProxyAdmin:", proxyAdmin);
+        console2.log("Proxy:", brrrProxy);
+        console2.log("Impl:", brrrImpl);
     }
 }
