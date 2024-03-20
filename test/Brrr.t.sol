@@ -95,11 +95,60 @@ contract BrrrTest is Test {
         assertEq(brrr.principal(), 2 * 1e17);
     }
 
+    function test_mint_multiple() public {
+        deal(ALICE, 1 ether);
+        uint256 aliceMinted = 0;
+        vm.startPrank(ALICE);
+        // ALICE mints 1 NFT each loop
+        for (uint256 i = 1; i <= 5; i++) {
+            brrr.mint{value: 0.1 ether}();
+            assertEq(brrr.totalSupply(), i);
+            assertEq(brrr.principal(), i * MINT_FEE);
+            assertEq(ALICE.balance, 1 ether - (i * MINT_FEE));
+            assertEq(brrr.balanceOf(ALICE), i);
+            aliceMinted = i;
+        }
+        vm.stopPrank();
+
+        deal(BOB, 1 ether);
+        vm.startPrank(BOB);
+        // BOB mints 1 NFT each loop
+        for (uint256 j = 1; j <= 5; j++) {
+            brrr.mint{value: 0.1 ether}();
+            assertEq(brrr.totalSupply(), aliceMinted + j);
+            assertEq(brrr.principal(), (aliceMinted + j) * MINT_FEE);
+            assertEq(BOB.balance, 1 ether - (j * MINT_FEE));
+            assertEq(brrr.balanceOf(BOB), j);
+        }
+        vm.stopPrank();
+    }
+
+    function test_mint_exceed_supply() public {
+        deal(ALICE, 10000 ether);
+        uint256 aliceMinted = 0;
+        vm.startPrank(ALICE);
+
+        // ALICE mints 1 NFT each loop
+        for (uint256 i = 1; i <= 1000; i++) {
+            brrr.mint{value: 0.1 ether}();
+            assertEq(brrr.totalSupply(), i);
+            assertEq(brrr.principal(), i * MINT_FEE);
+            assertEq(ALICE.balance, 10000 ether - (i * MINT_FEE));
+            assertEq(brrr.balanceOf(ALICE), i);
+            aliceMinted = i;
+        }
+
+        vm.expectRevert("exceed supply");
+        brrr.mint{value: 0.1 ether}();
+        vm.stopPrank();
+    }
+
     function test_burn_should_refund_mintfee() public {
         deal(ALICE, 1e17);
         vm.prank(ALICE);
         // ALICE mints 1 NFT which id is `0`, pay mintFee = 0.1 ETH
         brrr.mint{value: 1e17}();
+        assertEq(brrr.balanceOf(ALICE), 1);
         assertEq(brrr.totalSupply(), 1);
         assertEq(ALICE.balance, 0);
         assertEq(brrr.principal(), 1e17);
@@ -107,6 +156,7 @@ contract BrrrTest is Test {
         vm.prank(ALICE);
         // ALICE burn her NFT, refund the mintFee = 0.1 ETH
         brrr.burn(1);
+        assertEq(brrr.balanceOf(ALICE), 0);
         assertEq(brrr.totalSupply(), 0);
         assertEq(ALICE.balance, 1e17); // ALICE get refunded
         assertEq(brrr.principal(), 0);
