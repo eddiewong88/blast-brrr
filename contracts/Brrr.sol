@@ -52,7 +52,7 @@ contract Brrr is
         // configure gas mechanism
         IBlast(_blast).configureClaimableGas();
         // configure yield mechanism
-        IBlast(_blast).configureAutomaticYield();
+        // IBlast(_blast).configureAutomaticYield();
 
         // Set contract creator as governor
         IBlast(_blast).configureGovernor(msg.sender);
