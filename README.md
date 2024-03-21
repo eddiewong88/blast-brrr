@@ -49,5 +49,5 @@ Use this if can't config within constructor. it fails simulation but works on-ch
   forge verify-contract <impl_address> Brrr --verifier-url <api_address> --etherscan-api-key abc --watch
   ```
 
-- Note: can just put anything for `etherscan-api-key` just to bypass command line arg
+- On testnet, can just put anything for `etherscan-api-key` just to bypass command line arg
 - Then go to proxy address on chain explorer and we should be able to verify proxy just with clicking because implementation already verified
