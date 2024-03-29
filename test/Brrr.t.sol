@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 import {Brrr} from "../contracts/Brrr.sol";
 import {IBlast} from "../contracts/interfaces/IBlast.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {TransparentUpgradeableProxy, ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
 contract Reentrancy {
@@ -57,6 +57,25 @@ contract BrrrTest is Test {
         brrr = Brrr(address(proxy));
         brrr.initialize(address(blast), MINT_FEE, MAX_SUPPLY); // Mint Fee: 0.1 ETH, Max Supply: 1,000 NFTs
 
+        vm.stopPrank();
+    }
+
+    function test_upgrade() public {
+        vm.startPrank(DEPLOYER);
+        // new implementation of Brrr
+        Brrr newBrrrImpl = new Brrr();
+        // Deploy new Brrr implementation
+        address newImplAddress = address(newBrrrImpl);
+
+        // Use `upgradeAndCall` to upgrade the proxy to the new implementation and call the specified function
+        ITransparentUpgradeableProxy upgradeableProxy = ITransparentUpgradeableProxy(
+                address(proxy)
+            );
+        proxyAdmin.upgradeAndCall(
+            upgradeableProxy,
+            newImplAddress,
+            new bytes(0)
+        );
         vm.stopPrank();
     }
 
