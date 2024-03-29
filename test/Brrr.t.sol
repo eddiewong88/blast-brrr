@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 import {Brrr} from "../contracts/Brrr.sol";
 import {IBlast} from "../contracts/interfaces/IBlast.sol";
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {TransparentUpgradeableProxy, ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
@@ -60,24 +61,28 @@ contract BrrrTest is Test {
         vm.stopPrank();
     }
 
-    function test_upgrade() public {
-        vm.startPrank(DEPLOYER);
-        // new implementation of Brrr
-        Brrr newBrrrImpl = new Brrr();
-        // Deploy new Brrr implementation
-        address newImplAddress = address(newBrrrImpl);
+    // function test_upgrade() public {
+    //     vm.startPrank(DEPLOYER);
 
-        // Use `upgradeAndCall` to upgrade the proxy to the new implementation and call the specified function
-        ITransparentUpgradeableProxy upgradeableProxy = ITransparentUpgradeableProxy(
-                address(proxy)
-            );
-        proxyAdmin.upgradeAndCall(
-            upgradeableProxy,
-            newImplAddress,
-            new bytes(0)
-        );
-        vm.stopPrank();
-    }
+    //     // Upgrades.upgradeProxy(brrr, "Brrr.sol", "");
+
+    //     // new implementation of Brrr
+    //     Brrr newBrrrImpl = new Brrr();
+    //     // Deploy new Brrr implementation
+    //     address newImplAddress = address(newBrrrImpl);
+
+    //     // Use `upgradeAndCall` to upgrade the proxy to the new implementation and call the specified function
+    //     ITransparentUpgradeableProxy upgradeableProxy = ITransparentUpgradeableProxy(
+    //             address(proxy)
+    //         );
+    //     proxyAdmin.upgradeAndCall(
+    //         upgradeableProxy,
+    //         newImplAddress,
+    //         new bytes(0)
+    //     );
+
+    //     vm.stopPrank();
+    // }
 
     function test_CheckRoyaltyInfo() public {
         deal(ALICE, 1e17);

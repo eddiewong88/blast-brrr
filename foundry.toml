@@ -1,3 +1,8 @@
 [rpc_endpoints]
 blast_mainnet = "https://rpc.ankr.com/blast"
 blast_sepolia = "https://blast-sepolia.blockpi.network/v1/rpc/public"
+[profile.default]
+ffi = true
+ast = true
+build_info = true
+extra_output = ["storageLayout"]
