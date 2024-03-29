@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
 import "./interfaces/IBlast.sol"; // Import the interface
+import "./interfaces/IBlastPoints.sol"; // Import the interface
 
 contract Brrr is
     Initializable,
@@ -60,6 +61,15 @@ contract Brrr is
         // Set ERC2981 royalty info; fee = 10%
         // NOTE: Config `royaltyFee` before deploying, in BPS.
         _setDefaultRoyalty(msg.sender, 1000);
+    }
+
+    function configurePointsOperator(
+        address blastPointsAddress,
+        address pointsOperator
+    ) external onlyOwner {
+        IBlastPoints(blastPointsAddress).configurePointsOperator(
+            pointsOperator
+        );
     }
 
     // ╔════════════════════════╗
