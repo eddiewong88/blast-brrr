@@ -63,15 +63,6 @@ contract Brrr is
         _setDefaultRoyalty(msg.sender, 1000);
     }
 
-    function configurePointsOperator(
-        address blastPointsAddress,
-        address pointsOperator
-    ) external onlyOwner {
-        IBlastPoints(blastPointsAddress).configurePointsOperator(
-            pointsOperator
-        );
-    }
-
     // ╔════════════════════════╗
     //      FUNCTIONALITIES
     // ╚════════════════════════╝

@@ -1,8 +1,12 @@
 # blast-brrr
 
-yield go brrr
-
 Front-end demo: https://uat-blast-brrr.web.app
+
+install `yarn`
+
+## Test
+
+To test `yarn test`
 
 ## Deploy
 
