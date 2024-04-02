@@ -4,22 +4,26 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 import {Brrr} from "../contracts/Brrr.sol";
+import {BrrrV2} from "../contracts/BrrrV2.sol";
 import {IBlast} from "../contracts/interfaces/IBlast.sol";
+import {IBlastPoints} from "../contracts/interfaces/IBlastPoints.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {TransparentUpgradeableProxy, ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 contract BrrrForkTest is Test {
-    IBlast public blast = IBlast(0x4300000000000000000000000000000000000002);
+    IBlast public blast = IBlast(0x4300000000000000000000000000000000000002); // mainnet address
+    IBlastPoints public blastPoints =
+        IBlastPoints(0x2536FE9ab3F511540F2f9e2eC2A805005C3Dd800); // mainnet address
 
     address public constant DEPLOYER =
         0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // getting from scan
+    address public constant POINT_OPERATOR =
+        0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
     ProxyAdmin public proxyAdmin;
     address internal proxy;
     Brrr internal brrr;
-
-    address public constant ALICE = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
-    address public constant BOB = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
 
     uint256 public constant MINT_FEE = 0.1 ether;
     uint256 public constant MAX_SUPPLY = 1000;
@@ -33,11 +37,15 @@ contract BrrrForkTest is Test {
             abi.encodeWithSelector(blast.configureAutomaticYield.selector),
             ""
         );
+        vm.mockCall(
+            address(blastPoints),
+            abi.encodeWithSelector(
+                blastPoints.configurePointsOperator.selector
+            ),
+            ""
+        );
 
         vm.startPrank(DEPLOYER);
-
-        // Deploy ProxyAdmin
-        proxyAdmin = new ProxyAdmin(DEPLOYER);
         // deploy proxy contract and point it to implementation
         proxy = Upgrades.deployTransparentProxy(
             "Brrr.sol",
@@ -55,6 +63,49 @@ contract BrrrForkTest is Test {
         vm.startPrank(DEPLOYER);
         Upgrades.upgradeProxy(proxy, "BrrrV2.sol", "");
         vm.stopPrank();
+    }
+
+    function test_ConfigurePointsOperatorOldContractVersion() public {
+        vm.startPrank(DEPLOYER);
+        vm.expectRevert();
+        // call `configurePointsOperator` when proxy not yet upgraded to BrrrV2 contract
+        BrrrV2(proxy).configurePointsOperator(
+            address(blastPoints),
+            POINT_OPERATOR
+        );
+    }
+
+    function test_ConfigurePointsOperatorNotAllowed() public {
+        vm.startPrank(DEPLOYER);
+        Upgrades.upgradeProxy(proxy, "BrrrV2.sol", "");
+        vm.stopPrank();
+
+        // call `configurePointsOperator` when not owner
+        vm.startPrank(POINT_OPERATOR);
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "OwnableUnauthorizedAccount(address)",
+                POINT_OPERATOR
+            )
+        );
+        BrrrV2(proxy).configurePointsOperator(
+            address(blastPoints),
+            POINT_OPERATOR
+        );
+        vm.stopPrank();
+    }
+
+    function test_ConfigurePointsOperator() public {
+        vm.startPrank(DEPLOYER);
+        Upgrades.upgradeProxy(proxy, "BrrrV2.sol", "");
+        // call `configurePointsOperator` when proxy not yet upgraded to BrrrV2 contract
+        BrrrV2(proxy).configurePointsOperator(
+            address(blastPoints),
+            POINT_OPERATOR
+        );
+        vm.stopPrank();
+
+        vm.assertEq(BrrrV2(proxy).pointsOperator(), POINT_OPERATOR);
     }
 
     function test_DeployerIsGovernor() public {

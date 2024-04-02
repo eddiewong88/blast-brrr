@@ -26,11 +26,13 @@ contract BrrrV2 is
     uint256 public mintFee;
     uint256 public tokenIdCounter;
     uint256 public yieldClaimed;
+    address public pointsOperator;
 
     event Mint(address indexed minter, uint256 tokenId);
     event Burn(address indexed burner, uint256 tokenId);
     event ClaimYield(address indexed claimer, uint256 amount);
     event PrintItBaby(address indexed printer, uint256 amount);
+    event ConfigurePointsOperator(address indexed pointsOperator);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -70,11 +72,13 @@ contract BrrrV2 is
 
     function configurePointsOperator(
         address blastPointsAddress,
-        address pointsOperator
+        address newPointsOperator
     ) external onlyOwner {
         IBlastPoints(blastPointsAddress).configurePointsOperator(
-            pointsOperator
+            newPointsOperator
         );
+        pointsOperator = newPointsOperator;
+        emit ConfigurePointsOperator(newPointsOperator);
     }
 
     function mint() external payable {
