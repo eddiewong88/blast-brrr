@@ -19,32 +19,23 @@ contract Deploy is Script {
 
     function run() public {
         console2.log("Deploying Brrr...");
-        deployerAddress = vm.addr(deployerPrivateKey);
+        address deployerAddress = vm.addr(deployerPrivateKey);
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy Brrr impl
-        proxy = Upgrades.deployTransparentProxy(
+        address proxy = Upgrades.deployTransparentProxy(
             "Brrr.sol",
-            DEPLOYER,
+            deployerAddress,
             abi.encodeCall(
                 Brrr.initialize,
-                (address(blast), MINT_FEE, MAX_SUPPLY)
+                (address(BLAST), MINT_FEE, MAX_SUPPLY)
             )
         );
 
-        // // Use this if can't config within constructor. it fails simulation but works on-chain
-        // // IBlast(BLAST).configureAutomaticYieldOnBehalf(
-        // //     brrrProxy
-        // // );
-
-        address proxyAdminAddress = Upgrades.getAdminAddress(brrrProxy);
+        address proxyAdminAddress = Upgrades.getAdminAddress(proxy);
         vm.stopBroadcast();
         console2.log("Brrr deployed!");
         console2.log("Proxy (Brrr main contract):", proxy);
         console2.log("ProxyAdmin:", proxyAdminAddress);
-        console2.log(
-            "Impl:",
-            TransparentUpgradeableProxy(proxy)._implementation()
-        );
     }
 }
