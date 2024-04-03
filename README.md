@@ -1,8 +1,12 @@
 # blast-brrr
 
-yield go brrr
-
 Front-end demo: https://uat-blast-brrr.web.app
+
+install `yarn`
+
+## Test
+
+To test `yarn test`
 
 ## Deploy
 
@@ -14,13 +18,21 @@ Front-end demo: https://uat-blast-brrr.web.app
 
   for testnet:
 
-        forge script scripts/Deploy.s.sol --rpc-url blast_sepolia --broadcast --private-key xxx
+        forge script scripts/Deploy.s.sol --rpc-url blast_sepolia --broadcast
 
   for mainnet:
 
-      forge script scripts/Deploy.s.sol --rpc-url blast_mainnet --broadcast --private-key xxx
+      forge script scripts/Deploy.s.sol --rpc-url blast_mainnet --broadcast
 
-## Manual configure automatic yield (required)
+## Upgrade
+
+- Check `Upgrade.s.sol` params and values
+
+  for mainnet:
+
+        forge script scripts/Upgrade.s.sol --rpc-url blast_mainnet --broadcast
+
+## Manual configure automatic yield (required for Blast chain)
 
 Use this if can't config within constructor. it fails simulation but works on-chain
 
@@ -29,11 +41,11 @@ Use this if can't config within constructor. it fails simulation but works on-ch
 
   for testnet:
 
-        cast send --private-key xxx --rpc-url blast_sepolia 0x4300000000000000000000000000000000000002 "configureAutomaticYieldOnBehalf(address)" proxy_addr
+        cast send --private-key xxx --rpc-url blast_sepolia 0x4300000000000000000000000000000000000002 "configureAutomaticYieldOnBehalf(address)" "proxy_addr"
 
   for mainnet:
 
-        cast send --private-key xxx --rpc-url blast_mainnet 0x4300000000000000000000000000000000000002 "configureAutomaticYieldOnBehalf(address)" proxy_addr
+        cast send --private-key xxx --rpc-url blast_mainnet 0x4300000000000000000000000000000000000002 "configureAutomaticYieldOnBehalf(address)" "proxy_addr"
 
 ## Verify:
 

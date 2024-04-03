@@ -5,8 +5,9 @@ import "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 import {Brrr} from "../contracts/Brrr.sol";
 import {IBlast} from "../contracts/interfaces/IBlast.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {TransparentUpgradeableProxy, ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 contract Reentrancy {
     receive() external payable {
@@ -20,7 +21,7 @@ contract BrrrTest is Test {
     address public constant DEPLOYER =
         0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // getting from scan
     ProxyAdmin public proxyAdmin;
-    TransparentUpgradeableProxy internal proxy;
+    address public proxy;
     Brrr internal brrr;
 
     address public constant ALICE = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
@@ -45,18 +46,23 @@ contract BrrrTest is Test {
         vm.startPrank(DEPLOYER);
 
         // Deploy ProxyAdmin
-        proxyAdmin = new ProxyAdmin(address(this));
-        // Deploy Brrr impl
-        Brrr brrrImpl = new Brrr();
+        proxyAdmin = new ProxyAdmin(DEPLOYER);
         // deploy proxy contract and point it to implementation
-        proxy = new TransparentUpgradeableProxy(
-            address(brrrImpl),
-            address(proxyAdmin),
-            ""
+        proxy = Upgrades.deployTransparentProxy(
+            "Brrr.sol",
+            DEPLOYER,
+            abi.encodeCall(
+                Brrr.initialize,
+                (address(blast), MINT_FEE, MAX_SUPPLY)
+            )
         );
-        brrr = Brrr(address(proxy));
-        brrr.initialize(address(blast), MINT_FEE, MAX_SUPPLY); // Mint Fee: 0.1 ETH, Max Supply: 1,000 NFTs
+        brrr = Brrr(proxy);
+        vm.stopPrank();
+    }
 
+    function test_upgrade() public {
+        vm.startPrank(DEPLOYER);
+        Upgrades.upgradeProxy(proxy, "BrrrV2.sol", "");
         vm.stopPrank();
     }
 

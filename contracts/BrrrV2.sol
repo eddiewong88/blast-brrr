@@ -9,7 +9,8 @@ import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol"
 import "./interfaces/IBlast.sol"; // Import the interface
 import "./interfaces/IBlastPoints.sol"; // Import the interface
 
-contract Brrr is
+/// @custom:oz-upgrades-from contracts/Brrr.sol:Brrr
+contract BrrrV2 is
     Initializable,
     ERC721EnumerableUpgradeable,
     OwnableUpgradeable,
@@ -25,11 +26,13 @@ contract Brrr is
     uint256 public mintFee;
     uint256 public tokenIdCounter;
     uint256 public yieldClaimed;
+    address public pointsOperator;
 
     event Mint(address indexed minter, uint256 tokenId);
     event Burn(address indexed burner, uint256 tokenId);
     event ClaimYield(address indexed claimer, uint256 amount);
     event PrintItBaby(address indexed printer, uint256 amount);
+    event ConfigurePointsOperator(address indexed pointsOperator);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -66,6 +69,17 @@ contract Brrr is
     // ╔════════════════════════╗
     //      FUNCTIONALITIES
     // ╚════════════════════════╝
+
+    function configurePointsOperator(
+        address blastPointsAddress,
+        address newPointsOperator
+    ) external onlyOwner {
+        IBlastPoints(blastPointsAddress).configurePointsOperator(
+            newPointsOperator
+        );
+        pointsOperator = newPointsOperator;
+        emit ConfigurePointsOperator(newPointsOperator);
+    }
 
     function mint() external payable {
         require(msg.value == mintFee, "bruh ETH plz");

@@ -6,6 +6,7 @@ import {Brrr} from "../contracts/Brrr.sol";
 import {IBlast} from "../contracts/interfaces/IBlast.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 contract Deploy is Script {
     address constant BLAST = 0x4300000000000000000000000000000000000002;
@@ -18,30 +19,23 @@ contract Deploy is Script {
 
     function run() public {
         console2.log("Deploying Brrr...");
-
+        address deployerAddress = vm.addr(deployerPrivateKey);
         vm.startBroadcast(deployerPrivateKey);
 
-        // Deploy ProxyAdmin
-        address proxyAdmin = address(new ProxyAdmin(address(this)));
         // Deploy Brrr impl
-        address brrrImpl = address(new Brrr());
-        // Deploy proxy contract and point it to implementation
-        address brrrProxy = address(
-            new TransparentUpgradeableProxy(brrrImpl, proxyAdmin, "")
+        address proxy = Upgrades.deployTransparentProxy(
+            "Brrr.sol",
+            deployerAddress,
+            abi.encodeCall(
+                Brrr.initialize,
+                (address(BLAST), MINT_FEE, MAX_SUPPLY)
+            )
         );
-        // Initialize Brrr contract
-        Brrr(brrrProxy).initialize(BLAST, MINT_FEE, MAX_SUPPLY);
 
-        // Use this if can't config within constructor. it fails simulation but works on-chain
-        // IBlast(BLAST).configureAutomaticYieldOnBehalf(
-        //     brrrProxy
-        // );
-
+        address proxyAdminAddress = Upgrades.getAdminAddress(proxy);
         vm.stopBroadcast();
-
         console2.log("Brrr deployed!");
-        console2.log("ProxyAdmin:", proxyAdmin);
-        console2.log("Proxy:", brrrProxy);
-        console2.log("Impl:", brrrImpl);
+        console2.log("Proxy (Brrr main contract):", proxy);
+        console2.log("ProxyAdmin:", proxyAdminAddress);
     }
 }
